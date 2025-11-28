@@ -38,11 +38,27 @@ void PrintStatement::execute(VarState& state, Program& program) const{
 InputStatement::InputStatement(std::string source, std::string varName)
     : Statement(source), varName_(varName) {}
 InputStatement::~InputStatement() {}
-void InputStatement::execute(VarState& state,Program& program) const{
-    std::cout << '?' << std::endl;
+void InputStatement::execute(VarState& state, Program& program) const {
     int x;
-    std::cin >> x;
-    state.setValue(varName_,x);
+    while (true) {
+        std::cout << " ? ";
+        std::string input;
+        std::getline(std::cin, input);
+        try {
+            x = std::stoi(input);
+            size_t pos = 0;
+            std::stoi(input, &pos);
+            if (pos != input.length()) {
+                std::cout << "INVALID NUMBER" << std::endl;
+                continue;
+            }
+            state.setValue(varName_, x);
+            break;
+        } catch (const std::invalid_argument&) {
+            std::cout << "INVALID NUMBER" << std::endl;
+            continue;
+        } 
+    }
 }
 //GotoStatement
 GotoStatement::GotoStatement(std::string source,int num)
@@ -67,7 +83,8 @@ void EndStatement::execute(VarState& state,Program& program) const{
 IfStatement::IfStatement(std::string source,Expression* expr_left,Expression* expr_right,int num,char op)
     :Statement(source),expr_left_(expr_left),expr_right_(expr_right),num_(num),op_(op) {}
   IfStatement::~IfStatement() {
-    delete expr_left_,expr_right_;
+    delete expr_left_;
+    delete expr_right_;
   }
 void IfStatement::execute(VarState& state,Program& program) const{
     int x = expr_left_->evaluate(state);

@@ -9,12 +9,13 @@
 #include "Program.hpp"
 #include "Expression.hpp"
 #include "VarState.hpp"
+#include "utils/Error.hpp"
 
 Program::Program(){
     recorder_.clear();
     vars_.clear();
     programCounter_ = -1;
-    programEnd_ = 0;
+    programEnd_ = 1;
 }
 
 void Program::addStmt(int line, Statement* stmt){
@@ -22,12 +23,22 @@ void Program::addStmt(int line, Statement* stmt){
 }
 
 void Program::removeStmt(int line){
-    if(recorder_.hasLine(line)) recorder_.remove(line);
+    recorder_.remove(line);
 }
 
 void Program::run(){
-    while(recorder_.nextLine(programCounter_) != -1){
-        recorder_.get(recorder_.nextLine(programCounter_))->execute(vars_,*this);
+    programEnd_ = 0;
+    programCounter_ = -1;
+    while(programEnd_ != 1){
+        int next = recorder_.nextLine(programCounter_);
+        if(next == -1) break;
+        programCounter_ = next;
+        const Statement* stmt = recorder_.get(next);
+        try{
+            stmt->execute(vars_,(*this));
+        }catch(const BasicError &e){
+            std::cout << e.message() << std::endl;
+        }
     }
     programEnd();
 }
@@ -47,19 +58,27 @@ void Program::execute(Statement* stmt){
 
 int Program::getPC() const noexcept{
     if(!programEnd_) return programCounter_;
+    else {
+        return -1;
+    }
 }
+
 void Program::changePC(int line){
     if(recorder_.hasLine(line)){
-        programCounter_ = line-1;
+        programCounter_ = line;
     }
-    //
+    else{
+        throw BasicError("LINE NUMBER ERROR");
+    }
+    //?
 }
+
 void Program::programEnd(){
-    programEnd_ = 1;
+    if(programEnd_ == 0) programEnd_ = 1;
+    else throw BasicError("SYNTAX ERROR");
 }
 
 void Program::resetAfterRun() noexcept{
     (*this).clear();
     programCounter_ = -1;
-    programEnd_ = 0;
 }

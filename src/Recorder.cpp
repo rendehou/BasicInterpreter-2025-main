@@ -6,24 +6,26 @@
 
 #include "Statement.hpp"
 #include "Recorder.hpp"
-
+#include "utils/Error.hpp"
 Recorder::~Recorder(){
     for (auto it = RecorderMap.begin();it != RecorderMap.end();it++){
         delete it->second;
     }
 }
 
-void Recorder::add(int line,Statement* stmt){
-    if(RecorderMap.find(line) == RecorderMap.end()){
-        RecorderMap.insert(std::make_pair(line,stmt));
+void Recorder::add(int line, Statement* stmt){
+    if(RecorderMap.find(line) != RecorderMap.end()){
+        delete RecorderMap[line];
     }
-    else {
-        RecorderMap.find(line)->second = stmt;
-    }
+    RecorderMap[line] = stmt;  // 使用[]操作符进行覆盖
 }
-
-void Recorder::remove(int line){
-    RecorderMap.erase(line);
+/**/
+void Recorder::remove(int line){//???这样写对吗
+    auto it = RecorderMap.find(line);
+    if(it != RecorderMap.end()){
+        delete it->second;
+        RecorderMap.erase(it);
+    }
 }
 
 const Statement* Recorder::get(int line) const noexcept {
@@ -41,16 +43,20 @@ bool Recorder::hasLine(int line) const noexcept{
 }
 
 void Recorder::clear() noexcept{
-    for (auto it = RecorderMap.begin();it != RecorderMap.end();it++){
+    while (!RecorderMap.empty()) {
+        auto it = RecorderMap.begin();
         delete it->second;
-        RecorderMap.erase(it->first);
+        RecorderMap.erase(it);
     }
 }
 
 void Recorder::printLines() const{
-    for(auto it = RecorderMap.begin(); it != RecorderMap.end();it++){
-        std::cout << (it->second)->text() << std::endl;
+    if(!RecorderMap.empty()){
+        for(auto it = RecorderMap.begin(); it != RecorderMap.end();it++){
+            std::cout << (it->second)->text() << std::endl;
+        }
     }
+    else return ;
 }
 
 int Recorder::nextLine(int line) const noexcept{
