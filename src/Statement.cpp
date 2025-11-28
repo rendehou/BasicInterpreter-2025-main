@@ -38,10 +38,10 @@ void PrintStatement::execute(VarState& state, Program& program) const{
 InputStatement::InputStatement(std::string source, std::string varName)
     : Statement(source), varName_(varName) {}
 InputStatement::~InputStatement() {}
-void InputStatement::execute(VarState& state, Program& program) const {
-    int x;
+void InputStatement::execute(VarState& state,Program& program) const{
     while (true) {
-        std::cout << " ? ";
+        int x;
+        std::cout << " ?" << " ";
         std::string input;
         std::getline(std::cin, input);
         try {

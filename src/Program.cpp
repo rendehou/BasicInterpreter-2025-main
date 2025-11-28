@@ -29,20 +29,23 @@ void Program::removeStmt(int line){
 void Program::run(){
     programEnd_ = 0;
     programCounter_ = -1;
-    while(programEnd_ != 1){
-        int next = recorder_.nextLine(programCounter_);
-        if(next == -1) break;
-        programCounter_ = next;
-        const Statement* stmt = recorder_.get(next);
-        try{
-            stmt->execute(vars_,(*this));
-        }catch(const BasicError &e){
-            std::cout << e.message() << std::endl;
+    try {
+        while (programEnd_ == 0) {
+            int next = recorder_.nextLine(programCounter_);
+            if (next == -1) break;
+            programCounter_ = next;
+            const Statement* stmt = recorder_.get(next);
+            if (stmt != nullptr) {
+                stmt->execute(vars_, *this);
+            }
         }
+    } catch (const BasicError& e) {
+        std::cout << e.message() << std::endl;
     }
-    programEnd();
+    if (programEnd_ == 0) {
+        programEnd_ = 1;
+    }
 }
-
 void Program::list() const{
     recorder_.printLines();
 }
@@ -65,7 +68,8 @@ int Program::getPC() const noexcept{
 
 void Program::changePC(int line){
     if(recorder_.hasLine(line)){
-        programCounter_ = line;
+        programCounter_ = line - 1 ;//调到前一行
+
     }
     else{
         throw BasicError("LINE NUMBER ERROR");
@@ -74,8 +78,12 @@ void Program::changePC(int line){
 }
 
 void Program::programEnd(){
-    if(programEnd_ == 0) programEnd_ = 1;
-    else throw BasicError("SYNTAX ERROR");
+    if(programEnd_ == 0) {
+        programEnd_ = 1;
+    } 
+    else {
+        throw BasicError("SYNTAX ERROR"); 
+    }
 }
 
 void Program::resetAfterRun() noexcept{

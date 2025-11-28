@@ -72,7 +72,6 @@ int main() {
                 delete statement;
               }
             }
-            //program.list();
           }
         }
       }
